@@ -5,6 +5,7 @@ import com.vamint.entity.Student;
 import com.vamint.repository.StudentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.util.List;
 
@@ -13,6 +14,9 @@ import java.util.List;
 public class StudentService {
 
     private final StudentRepository studentRepository;
+
+    @Value("${default.profile.imageUrl:}")
+    private String defaultProfileImageUrl;
 
     public List<Student> getAllStudents() {
         return studentRepository.findAll();
@@ -57,6 +61,18 @@ public class StudentService {
         return studentRepository.save(student);
     }
 
+    // new helper to create with imageUrl
+    public Student createStudent(CreateStudentRequest request, String imageUrl) {
+        Student student = createStudent(request);
+        String toSave = imageUrl != null ? imageUrl
+                : (defaultProfileImageUrl != null && !defaultProfileImageUrl.isBlank() ? defaultProfileImageUrl : null);
+        if (toSave != null) {
+            student.setImageUrl(toSave);
+            student = studentRepository.save(student);
+        }
+        return student;
+    }
+
     public Student updateStudent(Long id, CreateStudentRequest request) {
         Student student = findById(id);
 
@@ -78,6 +94,19 @@ public class StudentService {
         return studentRepository.save(student);
     }
 
+    public Student updateStudent(Long id, CreateStudentRequest request, String imageUrl) {
+        Student student = updateStudent(id, request);
+        if (imageUrl != null) {
+            student.setImageUrl(imageUrl);
+            student = studentRepository.save(student);
+        } else if ((student.getImageUrl() == null || student.getImageUrl().isBlank()) && defaultProfileImageUrl != null
+                && !defaultProfileImageUrl.isBlank()) {
+            student.setImageUrl(defaultProfileImageUrl);
+            student = studentRepository.save(student);
+        }
+        return student;
+    }
+
     public void deleteStudent(Long id) {
         Student student = findById(id);
         studentRepository.delete(student);
@@ -88,6 +117,7 @@ public class StudentService {
                 student.getId(),
                 student.getName(),
                 student.getEmail(),
-                student.getRollNo());
+                student.getRollNo(),
+                student.getImageUrl());
     }
 }

@@ -35,12 +35,18 @@ const AdminDashboard = () => {
     rollNo: '',
     password: ''
   })
+  const [newStudentFile, setNewStudentFile] = useState(null)
+  const [newStudentPreview, setNewStudentPreview] = useState(null)
 
   const [newAdmin, setNewAdmin] = useState({
     name: '',
     email: '',
     password: ''
   })
+  const [newAdminFile, setNewAdminFile] = useState(null)
+  const [newAdminPreview, setNewAdminPreview] = useState(null)
+
+  const [profileModalData, setProfileModalData] = useState(null)
 
   const [editingStudent, setEditingStudent] = useState(null)
   const [editingAdmin, setEditingAdmin] = useState(null)
@@ -169,9 +175,31 @@ const AdminDashboard = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      await adminAPI.createStudent(newStudent);
+      // If a file is selected, use multipart endpoint
+      if (newStudentFile) {
+        const fd = new FormData()
+        fd.append('data', new Blob([JSON.stringify(newStudent)], { type: 'application/json' }))
+        fd.append('image', newStudentFile)
+        try {
+          await adminAPI.createStudentMultipart(fd)
+        } catch (err) {
+          console.error('Multipart create (json-part) failed, retrying as form fields', err)
+          // Retry with simple form fields as fallback
+          const fd2 = new FormData()
+          fd2.append('name', newStudent.name)
+          fd2.append('email', newStudent.email)
+          fd2.append('rollNo', newStudent.rollNo)
+          fd2.append('password', newStudent.password)
+          fd2.append('image', newStudentFile)
+          await adminAPI.createStudentMultipart(fd2)
+        }
+      } else {
+        await adminAPI.createStudent(newStudent)
+      }
       fetchStudents(); // refresh
       setNewStudent({ name: "", email: "", rollNo: "", password: "" });
+      setNewStudentFile(null)
+      setNewStudentPreview(null)
       setShowCreateStudentForm(false);
     } catch (err) {
       console.error("Error creating student", err);
@@ -185,8 +213,28 @@ const AdminDashboard = () => {
     e.preventDefault()
     setLoading(true)
     try {
-      await adminAPI.createAdmin(newAdmin)
+      if (newAdminFile) {
+        const fd = new FormData()
+        fd.append('data', new Blob([JSON.stringify(newAdmin)], { type: 'application/json' }))
+        fd.append('image', newAdminFile)
+        try {
+          await adminAPI.createAdminMultipart(fd)
+        } catch (err) {
+          console.error('Multipart create admin (json-part) failed, retrying as form fields', err)
+          const fd2 = new FormData()
+          fd2.append('name', newAdmin.name)
+          fd2.append('email', newAdmin.email)
+          fd2.append('password', newAdmin.password)
+          fd2.append('image', newAdminFile)
+          await adminAPI.createAdminMultipart(fd2)
+        }
+      } else {
+        // admin image required by backend for multipart create - fallback to regular JSON create if file not provided
+        await adminAPI.createAdmin(newAdmin)
+      }
       setNewAdmin({ name: '', email: '', password: '' })
+      setNewAdminFile(null)
+      setNewAdminPreview(null)
       setShowCreateAdminForm(false)
       fetchAdmins()
     } catch (error) {
@@ -231,7 +279,25 @@ const handleUpdateStudent = async (e) => {
   e.preventDefault();
   setLoading(true);
   try {
-    await adminAPI.updateStudent(editingStudent.id, newStudent);
+    if (newStudentFile) {
+      const fd = new FormData()
+      fd.append('data', new Blob([JSON.stringify(newStudent)], { type: 'application/json' }))
+      fd.append('image', newStudentFile)
+      try {
+        await adminAPI.updateStudentMultipart(editingStudent.id, fd)
+      } catch (err) {
+        console.error('Multipart update student (json-part) failed, retrying as form fields', err)
+        const fd2 = new FormData()
+        fd2.append('name', newStudent.name)
+        fd2.append('email', newStudent.email)
+        fd2.append('rollNo', newStudent.rollNo)
+        fd2.append('password', newStudent.password)
+        fd2.append('image', newStudentFile)
+        await adminAPI.updateStudentMultipart(editingStudent.id, fd2)
+      }
+    } else {
+      await adminAPI.updateStudent(editingStudent.id, newStudent);
+    }
     fetchStudents();
     setEditingStudent(null);
     setNewStudent({ name: "", email: "", rollNo: "", password: "" });
@@ -271,7 +337,24 @@ const handleDeleteStudent = async (id) => {
     e.preventDefault()
     setLoading(true)
     try {
-      await adminAPI.updateAdmin(editingAdmin.id, newAdmin)
+      if (newAdminFile) {
+        const fd = new FormData()
+        fd.append('data', new Blob([JSON.stringify(newAdmin)], { type: 'application/json' }))
+        fd.append('image', newAdminFile)
+        try {
+          await adminAPI.updateAdminMultipart(editingAdmin.id, fd)
+        } catch (err) {
+          console.error('Multipart update admin (json-part) failed, retrying as form fields', err)
+          const fd2 = new FormData()
+          fd2.append('name', newAdmin.name)
+          fd2.append('email', newAdmin.email)
+          fd2.append('password', newAdmin.password)
+          fd2.append('image', newAdminFile)
+          await adminAPI.updateAdminMultipart(editingAdmin.id, fd2)
+        }
+      } else {
+        await adminAPI.updateAdmin(editingAdmin.id, newAdmin)
+      }
       setNewAdmin({ name: '', email: '', password: '' })
       setEditingAdmin(null)
       setShowCreateAdminForm(false)
@@ -383,6 +466,28 @@ const handleDeleteStudent = async (id) => {
                 Logout
               </button>
             </div>
+            {/* Profile modal */}
+            {profileModalData && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center">
+                <div className="absolute inset-0 bg-black/40" onClick={() => setProfileModalData(null)} />
+                <div className="bg-white rounded-lg shadow-lg p-6 z-60 w-full max-w-md">
+                  <div className="flex items-center space-x-4">
+                    <img src={(profileModalData.data.imageUrl) || '/images/default-avatar.svg'} alt="avatar" className="w-24 h-24 rounded-full object-cover" />
+                    <div>
+                      <h3 className="text-xl font-semibold">{profileModalData.data.name}</h3>
+                      <p className="text-sm text-gray-600">{profileModalData.type === 'admin' ? 'Admin' : 'Student'}</p>
+                      <p className="text-sm text-gray-700 mt-2">Email: {profileModalData.data.email}</p>
+                      {profileModalData.type === 'student' && (
+                        <p className="text-sm text-gray-700">Roll No: {profileModalData.data.rollNo}</p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="mt-4 text-right">
+                    <button onClick={() => setProfileModalData(null)} className="bg-gray-600 text-white px-4 py-2 rounded-lg">Close</button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -617,6 +722,22 @@ const handleDeleteStudent = async (id) => {
                         required
                       />
                     </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Photo (optional)</label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const f = e.target.files[0]
+                          setNewStudentFile(f)
+                          setNewStudentPreview(f ? URL.createObjectURL(f) : null)
+                        }}
+                        className="w-full"
+                      />
+                      {newStudentPreview && (
+                        <img src={newStudentPreview} alt="preview" className="w-20 h-20 rounded-full mt-2 object-cover" />
+                      )}
+                    </div>
                   </div>
                   <div className="flex space-x-3">
                     <button
@@ -662,10 +783,19 @@ const handleDeleteStudent = async (id) => {
                       {students.map((student) => (
                         <tr key={student.id}>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{student.name}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{student.email}</td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{student.rollNo}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 flex items-center">
+                                <img src={student.imageUrl || '/images/default-avatar.svg'} alt={student.name} className="w-10 h-10 rounded-full mr-3 object-cover" />
+                                <span>{student.email}</span>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{student.rollNo}</td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <div className="flex space-x-2">
+                              <button
+                                onClick={() => { setProfileModalData({ type: 'student', data: student }) }}
+                                className="text-blue-600 hover:text-blue-900"
+                              >
+                                View
+                              </button>
                               <button
                                 onClick={() => handleEditStudent(student)}
                                 className="text-indigo-600 hover:text-indigo-900"
@@ -702,8 +832,13 @@ const handleDeleteStudent = async (id) => {
                   {students.map((student) => (
                     <div key={student.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
                       <div className="flex-1">
-                        <h4 className="font-medium text-gray-900">{student.name}</h4>
-                        <p className="text-sm text-gray-600">Roll: {student.rollNo} | Email: {student.email}</p>
+                        <div className="flex items-center">
+                          <img src={student.imageUrl || '/images/default-avatar.svg'} alt={student.name} className="w-12 h-12 rounded-full mr-3 object-cover" />
+                          <div>
+                            <h4 className="font-medium text-gray-900">{student.name}</h4>
+                            <p className="text-sm text-gray-600">Roll: {student.rollNo} | Email: {student.email}</p>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -761,6 +896,23 @@ const handleDeleteStudent = async (id) => {
                         required
                       />
                     </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">Photo (required)</label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const f = e.target.files[0]
+                          setNewAdminFile(f)
+                          setNewAdminPreview(f ? URL.createObjectURL(f) : null)
+                        }}
+                        className="w-full"
+                        required
+                      />
+                      {newAdminPreview && (
+                        <img src={newAdminPreview} alt="preview" className="w-20 h-20 rounded-full mt-2 object-cover" />
+                      )}
+                    </div>
                   </div>
                   <div className="flex space-x-3">
                     <button
@@ -803,6 +955,12 @@ const handleDeleteStudent = async (id) => {
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{admin.email}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <div className="flex space-x-2">
+                            <button
+                              onClick={() => { setProfileModalData({ type: 'admin', data: admin }) }}
+                              className="text-blue-600 hover:text-blue-900 mr-2"
+                            >
+                              View
+                            </button>
                             <button
                               onClick={() => handleEditAdmin(admin)}
                               className="text-indigo-600 hover:text-indigo-900"

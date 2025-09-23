@@ -1,7 +1,6 @@
 package com.vamint.controller;
 
 import com.vamint.dto.*;
-import com.vamint.entity.Student;
 import com.vamint.service.AdminService;
 import com.vamint.service.AttendanceService;
 import com.vamint.service.LectureService;
@@ -14,6 +13,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -24,7 +25,9 @@ public class AdminController {
     private final LectureService lectureService;
     private final AttendanceService attendanceService;
     private final StudentService studentService;
+    private final com.vamint.service.ImageService imageService;
     private final AdminService adminService;
+    private static final Logger logger = LoggerFactory.getLogger(AdminController.class);
 
     @PostMapping("/lectures")
     public ResponseEntity<LectureResponse> createLecture(@Valid @RequestBody CreateLectureRequest request) {
@@ -81,6 +84,42 @@ public class AdminController {
         return ResponseEntity.ok(studentService.toDto(student));
     }
 
+    // multipart create: accepts optional image file under 'image'
+    @PostMapping(value = "/students/upload", consumes = { "multipart/form-data" })
+    public ResponseEntity<?> createStudentWithImage(
+            @RequestPart(value = "data", required = false) @Valid CreateStudentRequest request,
+            @RequestPart(value = "image", required = false) org.springframework.web.multipart.MultipartFile image,
+            @RequestParam(required = false) Map<String, String> formFields) {
+        try {
+            String imageUrl = null;
+            if (image != null && !image.isEmpty()) {
+                try {
+                    imageUrl = imageService.uploadAndGetUrl(image, null);
+                } catch (Exception ex) {
+                    // Log and continue without image so insert still succeeds
+                    logger.error("Failed to upload student image, continuing without image", ex);
+                    imageUrl = null;
+                }
+            }
+            // Support both JSON-part and simple form-fields
+            if (request == null && formFields != null && !formFields.isEmpty()) {
+                CreateStudentRequest r = new CreateStudentRequest();
+                r.setName(formFields.get("name"));
+                r.setEmail(formFields.get("email"));
+                r.setRollNo(formFields.get("rollNo"));
+                r.setPassword(formFields.get("password"));
+                request = r;
+            }
+            if (request == null) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Missing student data"));
+            }
+            com.vamint.entity.Student student = studentService.createStudent(request, imageUrl);
+            return ResponseEntity.ok(studentService.toDto(student));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", e.getMessage()));
+        }
+    }
+
     @GetMapping("/admins")
     public ResponseEntity<List<com.vamint.entity.Admin>> getAllAdmins() {
         List<com.vamint.entity.Admin> admins = adminService.getAllAdmins();
@@ -91,6 +130,39 @@ public class AdminController {
     public ResponseEntity<com.vamint.entity.Admin> createAdmin(@Valid @RequestBody CreateAdminRequest request) {
         com.vamint.entity.Admin admin = adminService.createAdmin(request);
         return ResponseEntity.ok(admin);
+    }
+
+    // multipart create for admin - image file is required here
+    @PostMapping(value = "/admins/upload", consumes = { "multipart/form-data" })
+    public ResponseEntity<?> createAdminWithImage(
+            @RequestPart(value = "data", required = false) @Valid CreateAdminRequest request,
+            @RequestPart(value = "image", required = false) org.springframework.web.multipart.MultipartFile image,
+            @RequestParam(required = false) Map<String, String> formFields) {
+        try {
+            String imageUrl = null;
+            if (image != null && !image.isEmpty()) {
+                try {
+                    imageUrl = imageService.uploadAndGetUrl(image, null);
+                } catch (Exception ex) {
+                    logger.error("Failed to upload admin image, continuing without image", ex);
+                    imageUrl = null;
+                }
+            }
+            if (request == null && formFields != null && !formFields.isEmpty()) {
+                CreateAdminRequest r = new CreateAdminRequest();
+                r.setName(formFields.get("name"));
+                r.setEmail(formFields.get("email"));
+                r.setPassword(formFields.get("password"));
+                request = r;
+            }
+            if (request == null) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Missing admin data"));
+            }
+            com.vamint.entity.Admin admin = adminService.createAdmin(request, imageUrl);
+            return ResponseEntity.ok(admin);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", e.getMessage()));
+        }
     }
 
     @GetMapping("/lectures/{lectureId}/attendance-stats")
@@ -113,6 +185,41 @@ public class AdminController {
         return ResponseEntity.ok(studentService.toDto(student));
     }
 
+    // multipart update: update student fields and optional image file
+    @PutMapping(value = "/students/{id}/upload", consumes = { "multipart/form-data" })
+    public ResponseEntity<?> updateStudentWithImage(
+            @PathVariable Long id,
+            @RequestPart(value = "data", required = false) @Valid CreateStudentRequest request,
+            @RequestPart(value = "image", required = false) org.springframework.web.multipart.MultipartFile image,
+            @RequestParam(required = false) Map<String, String> formFields) {
+        try {
+            String imageUrl = null;
+            if (image != null && !image.isEmpty()) {
+                try {
+                    imageUrl = imageService.uploadAndGetUrl(image, null);
+                } catch (Exception ex) {
+                    logger.error("Failed to upload student image for update, continuing without image", ex);
+                    imageUrl = null;
+                }
+            }
+            if (request == null && formFields != null && !formFields.isEmpty()) {
+                CreateStudentRequest r = new CreateStudentRequest();
+                r.setName(formFields.get("name"));
+                r.setEmail(formFields.get("email"));
+                r.setRollNo(formFields.get("rollNo"));
+                r.setPassword(formFields.get("password"));
+                request = r;
+            }
+            if (request == null) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Missing student data"));
+            }
+            com.vamint.entity.Student student = studentService.updateStudent(id, request, imageUrl);
+            return ResponseEntity.ok(studentService.toDto(student));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", e.getMessage()));
+        }
+    }
+
     @DeleteMapping("/students/{id}")
     public ResponseEntity<Void> deleteStudent(@PathVariable Long id) {
         studentService.deleteStudent(id);
@@ -131,6 +238,40 @@ public class AdminController {
             @Valid @RequestBody CreateAdminRequest request) {
         com.vamint.entity.Admin admin = adminService.updateAdmin(id, request);
         return ResponseEntity.ok(admin);
+    }
+
+    // multipart update for admin - image optional (admin can update image)
+    @PutMapping(value = "/admins/{id}/upload", consumes = { "multipart/form-data" })
+    public ResponseEntity<?> updateAdminWithImage(
+            @PathVariable Long id,
+            @RequestPart(value = "data", required = false) @Valid CreateAdminRequest request,
+            @RequestPart(value = "image", required = false) org.springframework.web.multipart.MultipartFile image,
+            @RequestParam(required = false) Map<String, String> formFields) {
+        try {
+            String imageUrl = null;
+            if (image != null && !image.isEmpty()) {
+                try {
+                    imageUrl = imageService.uploadAndGetUrl(image, null);
+                } catch (Exception ex) {
+                    logger.error("Failed to upload admin image for update, continuing without image", ex);
+                    imageUrl = null;
+                }
+            }
+            if (request == null && formFields != null && !formFields.isEmpty()) {
+                CreateAdminRequest r = new CreateAdminRequest();
+                r.setName(formFields.get("name"));
+                r.setEmail(formFields.get("email"));
+                r.setPassword(formFields.get("password"));
+                request = r;
+            }
+            if (request == null) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Missing admin data"));
+            }
+            com.vamint.entity.Admin admin = adminService.updateAdmin(id, request, imageUrl);
+            return ResponseEntity.ok(admin);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", e.getMessage()));
+        }
     }
 
     @DeleteMapping("/admins/{id}")

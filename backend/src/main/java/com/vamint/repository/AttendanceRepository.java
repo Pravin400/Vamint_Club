@@ -12,28 +12,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-AttendanceRepository extends JpaRepository<Attendance, Long> {
+public interface AttendanceRepository extends JpaRepository<Attendance, Long> {
 
     List<Attendance> findByLecture(Lecture lecture);
 

@@ -106,7 +106,7 @@ export default function Landing() {
           </div>
 
           <div className="w-full h-56 md:h-64 bg-gray-100 rounded-md overflow-hidden shadow">
-            <iframe
+            {/* <iframe
               src="https://www.google.com/maps/embed?pb=!1m14!1m8!1m3!1d30246.303084010866!2d73.777152!3d18.628608!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bc2b9a4e8d2b591%3A0x4ef56ccd20373d98!2sMahasadhu%20Shree%20Morya%20Gosavi%20Maharaj%20Sanjivan%20Samadhi%20Mandir!5e0!3m2!1sen!2sin!4v1758607086619!5m2!1sen!2sin"
               width="100%"
               height="100%"
@@ -115,7 +115,17 @@ export default function Landing() {
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
               title="Vamint Club Location"
-            />
+              /> */}
+              <iframe 
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3780.014489318079!2d73.73460111122873!3d18.66334578238489!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bc2b1cbff57dfaf%3A0x8b679addcb78c5d3!2sParvatara!5e0!3m2!1sen!2sin!4v1758622847289!5m2!1sen!2sin" 
+            width="600" 
+            height="450" 
+            style={{border:0}}
+             allowfullscreen
+            loading="lazy" 
+            referrerpolicy="no-referrer-when-downgrade"
+            title ="Parvtara"/>
+        
           </div>
         </div>
       </section>

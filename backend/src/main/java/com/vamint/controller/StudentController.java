@@ -2,14 +2,11 @@ package com.vamint.controller;
 
 import com.vamint.dto.AttendanceStatsResponse;
 import com.vamint.dto.LectureResponse;
-import com.vamint.entity.Student;
 import com.vamint.service.AttendanceService;
 import com.vamint.service.LectureService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/student")

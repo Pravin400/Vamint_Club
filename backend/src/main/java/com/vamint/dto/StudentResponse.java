@@ -12,4 +12,5 @@ public class StudentResponse {
     private String name;
     private String email;
     private String rollNo;
+    private String imageUrl;
 }
