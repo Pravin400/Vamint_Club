@@ -146,7 +146,7 @@ const AdminDashboard = () => {
     setLoading(true)
     try {
       await adminAPI.deleteLecture(id)
-      // clear selection if deleted lecture was selected
+      
       if (selectedLecture?.id === id) {
         setSelectedLecture(null)
         setLectureStats(null)
