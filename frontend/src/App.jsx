@@ -2,6 +2,7 @@ import React from 'react'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import Login from './components/Login'
+import Landing from './components/Landing'
 import AdminDashboard from './components/AdminDashboard'
 import StudentDashboard from './components/StudentDashboard'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -21,15 +22,10 @@ function AppContent() {
   }
 
   return (
+    <>
     <Routes>
       <Route path="/login" element={<Login />} />
-      <Route path="/" element={
-        user ? (
-          <Navigate to={user.userType === 'admin' ? '/admin' : '/student'} replace />
-        ) : (
-          <Navigate to="/login" replace />
-        )
-      } />
+      <Route path="/" element={<Landing />} />
       <Route path="/admin" element={
         <ProtectedRoute requiredUserType="admin">
           <AdminDashboard />
@@ -41,6 +37,12 @@ function AppContent() {
         </ProtectedRoute>
       } />
     </Routes>
+    <div className="border-t-2 justify-center content-center">
+      
+    </div>
+      
+
+   </> 
   )
 }
 

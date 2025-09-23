@@ -6,6 +6,10 @@ import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, 
 
 const StudentDashboard = () => {
   const { user, logout } = useAuth()
+  const handleLogout = () => {
+    logout()
+    window.location.href = '/'
+  }
   const [upcomingLectures, setUpcomingLectures] = useState([])
   const [attendanceStats, setAttendanceStats] = useState(null)
   const [loading, setLoading] = useState(false)
@@ -65,7 +69,7 @@ const StudentDashboard = () => {
             <div className="flex items-center space-x-4">
               <span className="text-sm text-gray-600">Welcome, {user?.name}</span>
               <button
-                onClick={logout}
+                onClick={handleLogout}
                 className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
               >
                 Logout

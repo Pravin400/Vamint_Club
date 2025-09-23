@@ -15,3 +15,17 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+/* Video placeholder should cover the entire viewport */
+#video-placeholder {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(90deg, rgba(0,0,0,0.6), rgba(0,0,0,0.3));
+}
+
+/* Modal backdrop and stacking */
+.modal-backdrop { z-index: 9990; }
+.modal-content { z-index: 10000; }
