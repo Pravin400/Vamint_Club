@@ -10,7 +10,7 @@ import ProtectedRoute from './components/ProtectedRoute'
 function AppContent() {
   const { user, loading } = useAuth()
 
-  // Debug: Log user state changes
+
   console.log('AppContent - User:', user, 'Loading:', loading)
 
   if (loading) {
