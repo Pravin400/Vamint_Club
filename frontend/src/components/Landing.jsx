@@ -116,15 +116,16 @@ export default function Landing() {
               referrerPolicy="no-referrer-when-downgrade"
               title="Vamint Club Location"
               /> */}
+              {/* <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15127.373979777385!2d73.76155580046832!3d18.58109326921923!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bc2b9364128099d%3A0x43892e901929965f!2sBalewadi%2C%20Pune%2C%20Maharashtra!5e0!3m2!1sen!2sin!4v1759490998729!5m2!1sen!2sin" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe> */}
               <iframe 
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3780.014489318079!2d73.73460111122873!3d18.66334578238489!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bc2b1cbff57dfaf%3A0x8b679addcb78c5d3!2sParvatara!5e0!3m2!1sen!2sin!4v1758622847289!5m2!1sen!2sin" 
+              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15127.373979777385!2d73.76155580046832!3d18.58109326921923!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3bc2b9364128099d%3A0x43892e901929965f!2sBalewadi%2C%20Pune%2C%20Maharashtra!5e0!3m2!1sen!2sin!4v1759490998729!5m2!1sen!2sin" 
             width="600" 
             height="450" 
             style={{border:0}}
              allowfullscreen
             loading="lazy" 
             referrerpolicy="no-referrer-when-downgrade"
-            title ="Parvtara"/>
+            title ="Vamint CLub"/>
         
           </div>
         </div>
