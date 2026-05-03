@@ -1,0 +1,26 @@
+# Development and Runtime Files
+node_modules/
+dist/
+build/
+target/
+*.log
+npm-debug.log*
+
+# Environment and Secrets
+.env
+.env.*
+*.local
+
+# OS Generated Files
+.DS_Store
+Thumbs.db
+
+# IDEs and Editors
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Project specific
+*.sql
+*.md
